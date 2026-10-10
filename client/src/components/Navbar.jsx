@@ -12,6 +12,7 @@ const Navbar = () => {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [imgError, setImgError] = useState(false);
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
 
   const isAdmin = user?.role === 'admin' || location.pathname.startsWith('/admin');
 
@@ -31,9 +32,6 @@ const Navbar = () => {
   const getAvatarSrc = () => {
     if (user?.profileImage && user.profileImage.trim() !== '') {
       return getImageUrl(user.profileImage);
-    }
-    if (isAdmin) {
-      return '/admin-avatar.jpg';
     }
     return null;
   };
@@ -70,7 +68,7 @@ const Navbar = () => {
           </Link>
 
           {/* Center Navigation Links */}
-          {!isAdmin ? (
+          {!isAuthenticated ? (
             <nav className="hidden md:flex items-center gap-6">
               <Link
                 to="/"
@@ -110,25 +108,19 @@ const Navbar = () => {
 
                 <div className="h-5 w-px bg-slate-200" />
 
-                {/* User / Admin Profile Menu Badge with proper profile avatar image */}
-                <div className="flex items-center gap-2">
-                  <Link
-                    to="/profile"
-                    title="Account Profile & Settings"
-                    className="flex items-center gap-2.5 p-1.5 pr-2.5 rounded-xl hover:bg-slate-100 transition-all border border-transparent hover:border-slate-200 group"
+                {/* User Profile Dropdown */}
+                <div className="relative">
+                  <button
+                    onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                    className="flex items-center gap-2.5 p-1.5 pr-2.5 rounded-xl hover:bg-slate-100 transition-all border border-transparent hover:border-slate-200 focus:outline-none"
                   >
-                    {/* Proper Profile Avatar Display */}
                     <div className="relative shrink-0">
                       {avatarSrc && !imgError ? (
                         <img
                           src={avatarSrc}
                           alt={user?.name || 'Admin'}
-                          onError={(e) => {
-                            if (e.target.src !== window.location.origin + '/admin-avatar.jpg') {
-                              e.target.src = '/admin-avatar.jpg';
-                            } else {
-                              setImgError(true);
-                            }
+                          onError={() => {
+                            setImgError(true);
                           }}
                           className="w-9 h-9 rounded-full object-cover ring-2 ring-indigo-500/30 shadow-xs bg-indigo-50"
                         />
@@ -137,13 +129,12 @@ const Navbar = () => {
                           {user?.name ? user.name.charAt(0).toUpperCase() : (isAdmin ? 'A' : 'U')}
                         </div>
                       )}
-                      {/* Active Online Status Badge */}
                       <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full"></span>
                     </div>
 
                     <div className="text-left hidden lg:block">
                       <div className="flex items-center gap-1.5">
-                        <p className="text-xs font-bold text-slate-800 leading-tight group-hover:text-indigo-600 transition-colors">
+                        <p className="text-xs font-bold text-slate-800 leading-tight">
                           {user?.name || (isAdmin ? 'System Admin' : 'User')}
                         </p>
                         {isAdmin && (
@@ -156,15 +147,37 @@ const Navbar = () => {
                         {user?.email || 'admin@fixitai.demo'}
                       </span>
                     </div>
-                  </Link>
-
-                  <button
-                    onClick={handleLogout}
-                    title="Log Out"
-                    className="p-2 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors"
-                  >
-                    <LogOut className="w-4 h-4" />
                   </button>
+
+                  {/* Dropdown Menu */}
+                  {profileDropdownOpen && (
+                    <>
+                      <div 
+                        className="fixed inset-0 z-40" 
+                        onClick={() => setProfileDropdownOpen(false)} 
+                      />
+                      <div className="absolute right-0 mt-2 w-48 bg-white border border-slate-200 rounded-xl shadow-lg shadow-slate-200/50 py-1 z-50">
+                        <Link
+                          to="/profile"
+                          onClick={() => setProfileDropdownOpen(false)}
+                          className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+                        >
+                          <User className="w-4 h-4" />
+                          Settings
+                        </Link>
+                        <button
+                          onClick={() => {
+                            setProfileDropdownOpen(false);
+                            handleLogout();
+                          }}
+                          className="w-full flex items-center gap-2 px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 transition-colors text-left"
+                        >
+                          <LogOut className="w-4 h-4" />
+                          Log Out
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
               </>
             ) : (
@@ -210,12 +223,8 @@ const Navbar = () => {
                     <img
                       src={avatarSrc}
                       alt={user?.name || 'Admin'}
-                      onError={(e) => {
-                        if (e.target.src !== window.location.origin + '/admin-avatar.jpg') {
-                          e.target.src = '/admin-avatar.jpg';
-                        } else {
-                          setImgError(true);
-                        }
+                      onError={() => {
+                        setImgError(true);
                       }}
                       className="w-10 h-10 rounded-full object-cover ring-2 ring-indigo-500/40"
                     />
@@ -263,27 +272,31 @@ const Navbar = () => {
           ) : (
             /* NON-ADMIN PUBLIC MENU */
             <>
-              <Link
-                to="/"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-lg text-base font-medium text-slate-700 hover:bg-slate-50"
-              >
-                Home
-              </Link>
-              <Link
-                to="/about"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-lg text-base font-medium text-slate-700 hover:bg-slate-50"
-              >
-                About
-              </Link>
-              <Link
-                to="/contact"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-lg text-base font-medium text-slate-700 hover:bg-slate-50"
-              >
-                Contact
-              </Link>
+              {!isAuthenticated && (
+                <>
+                  <Link
+                    to="/"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="block px-3 py-2 rounded-lg text-base font-medium text-slate-700 hover:bg-slate-50"
+                  >
+                    Home
+                  </Link>
+                  <Link
+                    to="/about"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="block px-3 py-2 rounded-lg text-base font-medium text-slate-700 hover:bg-slate-50"
+                  >
+                    About
+                  </Link>
+                  <Link
+                    to="/contact"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="block px-3 py-2 rounded-lg text-base font-medium text-slate-700 hover:bg-slate-50"
+                  >
+                    Contact
+                  </Link>
+                </>
+              )}
 
               {isAuthenticated ? (
                 <div className="pt-4 border-t border-slate-100 space-y-2">

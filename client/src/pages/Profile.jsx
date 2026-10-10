@@ -30,9 +30,7 @@ const Profile = () => {
 
   const [selectedFile, setSelectedFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(
-    user?.profileImage
-      ? getImageUrl(user.profileImage)
-      : (user?.role === 'admin' ? '/admin-avatar.jpg' : '')
+    user?.profileImage ? getImageUrl(user.profileImage) : ''
   );
   const [imgError, setImgError] = useState(false);
 
@@ -45,11 +43,7 @@ const Profile = () => {
         profileImage: user.profileImage || '',
       });
       if (!selectedFile) {
-        setImagePreview(
-          user.profileImage
-            ? getImageUrl(user.profileImage)
-            : (user.role === 'admin' ? '/admin-avatar.jpg' : '')
-        );
+        setImagePreview(user.profileImage ? getImageUrl(user.profileImage) : '');
       }
       setImgError(false);
     }
@@ -243,16 +237,6 @@ const Profile = () => {
               <Upload className="w-3.5 h-3.5 text-indigo-600" />
               Upload Photo
             </button>
-            {isAdmin && (
-              <button
-                type="button"
-                onClick={() => handleSelectPreset('/admin-avatar.jpg')}
-                className="px-4 py-2 text-xs font-semibold text-indigo-700 border border-indigo-200 rounded-xl bg-indigo-50/70 hover:bg-indigo-100 transition-all inline-flex items-center gap-1.5 shadow-2xs"
-              >
-                <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
-                Default Admin Avatar
-              </button>
-            )}
           </div>
         </div>
 
@@ -331,11 +315,7 @@ const Profile = () => {
                     type="button"
                     onClick={() => {
                       setSelectedFile(null);
-                      setImagePreview(
-                        user?.profileImage
-                          ? getImageUrl(user.profileImage)
-                          : (isAdmin ? '/admin-avatar.jpg' : '')
-                      );
+                      setImagePreview(user?.profileImage ? getImageUrl(user.profileImage) : '');
                     }}
                     className="px-2.5 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
                   >

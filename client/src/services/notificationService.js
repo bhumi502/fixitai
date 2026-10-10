@@ -19,4 +19,16 @@ export const notificationService = {
     const response = await api.put('/notifications/read-all');
     return response.data;
   },
+
+  // Delete single notification
+  deleteNotification: async (id) => {
+    const response = await api.delete(`/notifications/${id}`);
+    return response.data;
+  },
+
+  // Delete all notifications
+  deleteAllNotifications: async () => {
+    const response = await api.delete('/notifications/clear-all');
+    return response.data;
+  },
 };

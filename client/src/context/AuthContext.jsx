@@ -67,9 +67,18 @@ export const AuthProvider = ({ children }) => {
     return { success: false, message: res.message || 'Login failed' };
   };
 
-  // Register handler
+  // Register handler (Sends OTP)
   const register = async (userData) => {
     const res = await authService.register(userData);
+    if (res.success && res.requireOtp) {
+      return res; // Return `{ success, requireOtp, email, message }` to the component
+    }
+    return { success: false, message: res.message || 'Registration failed' };
+  };
+
+  // Verify OTP & Login
+  const verifyOtp = async (email, otp) => {
+    const res = await authService.verifyOtp(email, otp);
     if (res.success && res.data) {
       const newUser = {
         _id: res.data._id,
@@ -86,7 +95,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('fixit_user', JSON.stringify(newUser));
       return { success: true, user: newUser };
     }
-    return { success: false, message: res.message || 'Registration failed' };
+    return { success: false, message: res.message || 'Verification failed' };
   };
 
   // Logout handler
@@ -114,6 +123,7 @@ export const AuthProvider = ({ children }) => {
         loading,
         login,
         register,
+        verifyOtp,
         logout,
         updateUser,
         isAuthenticated: !!user,

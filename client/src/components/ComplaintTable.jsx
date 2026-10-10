@@ -1,32 +1,84 @@
 // components/ComplaintTable.jsx - Professional Table Layout for Complaints
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import StatusBadge from './StatusBadge';
 import PriorityBadge from './PriorityBadge';
-import { Eye, Edit3, Trash2, MapPin } from 'lucide-react';
+import { Eye, Edit3, Trash2, MapPin, ChevronUp, ChevronDown } from 'lucide-react';
 import { formatDateOnly, truncateText } from '../utils/helpers';
 import { useAuth } from '../context/AuthContext';
 
 const ComplaintTable = ({ complaints = [], onDelete, onAssign, onStatusChange }) => {
   const { user, isAdmin, isStaff } = useAuth();
+  
+  const [sortConfig, setSortConfig] = useState({ key: 'createdAt', direction: 'desc' });
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
+
+  const handleSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+    setCurrentPage(1);
+  };
+
+  const getSortIcon = (key) => {
+    if (sortConfig.key !== key) return <ChevronUp className="w-3.5 h-3.5 opacity-0 group-hover:opacity-40 transition-opacity" />;
+    return sortConfig.direction === 'asc' ? <ChevronUp className="w-3.5 h-3.5 text-indigo-500" /> : <ChevronDown className="w-3.5 h-3.5 text-indigo-500" />;
+  };
+
+  const sortedComplaints = [...complaints].sort((a, b) => {
+    let aVal = a[sortConfig.key];
+    let bVal = b[sortConfig.key];
+    
+    if (sortConfig.key === 'createdAt') {
+      aVal = new Date(a.createdAt).getTime();
+      bVal = new Date(b.createdAt).getTime();
+    }
+    
+    if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
+    if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  const totalPages = Math.ceil(sortedComplaints.length / itemsPerPage);
+  const paginatedComplaints = sortedComplaints.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   return (
     <div className="overflow-x-auto bg-white rounded-2xl border border-slate-200/80 shadow-xs">
       <table className="w-full text-left border-collapse">
         <thead>
-          <tr className="bg-slate-50/75 border-b border-slate-200/80 text-slate-500 uppercase text-[11px] font-bold tracking-wider">
-            <th className="py-3.5 px-4">ID</th>
-            <th className="py-3.5 px-4">Title & Details</th>
-            <th className="py-3.5 px-4">Category</th>
-            <th className="py-3.5 px-4">Priority</th>
-            <th className="py-3.5 px-4">Location</th>
-            <th className="py-3.5 px-4">Status</th>
-            <th className="py-3.5 px-4">Reported</th>
+          <tr className="bg-slate-50/75 border-b border-slate-200/80 text-slate-500 uppercase text-[11px] font-bold tracking-wider select-none">
+            <th className="py-3.5 px-4 cursor-pointer group hover:bg-slate-100 transition-colors" onClick={() => handleSort('complaintId')}>
+              <div className="flex items-center gap-1 whitespace-nowrap">ID {getSortIcon('complaintId')}</div>
+            </th>
+            <th className="py-3.5 px-4 cursor-pointer group hover:bg-slate-100 transition-colors" onClick={() => handleSort('title')}>
+              <div className="flex items-center gap-1 whitespace-nowrap">Title & Details {getSortIcon('title')}</div>
+            </th>
+            <th className="py-3.5 px-4 cursor-pointer group hover:bg-slate-100 transition-colors" onClick={() => handleSort('category')}>
+              <div className="flex items-center gap-1 whitespace-nowrap">Category {getSortIcon('category')}</div>
+            </th>
+            <th className="py-3.5 px-4 cursor-pointer group hover:bg-slate-100 transition-colors" onClick={() => handleSort('priority')}>
+              <div className="flex items-center gap-1 whitespace-nowrap">Priority {getSortIcon('priority')}</div>
+            </th>
+            <th className="py-3.5 px-4 cursor-pointer group hover:bg-slate-100 transition-colors" onClick={() => handleSort('location')}>
+              <div className="flex items-center gap-1 whitespace-nowrap">Location {getSortIcon('location')}</div>
+            </th>
+            <th className="py-3.5 px-4 cursor-pointer group hover:bg-slate-100 transition-colors" onClick={() => handleSort('status')}>
+              <div className="flex items-center gap-1 whitespace-nowrap">Status {getSortIcon('status')}</div>
+            </th>
+            <th className="py-3.5 px-4 cursor-pointer group hover:bg-slate-100 transition-colors" onClick={() => handleSort('createdAt')}>
+              <div className="flex items-center gap-1 whitespace-nowrap">Reported {getSortIcon('createdAt')}</div>
+            </th>
             <th className="py-3.5 px-4 text-right">Actions</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100 text-sm">
-          {complaints.map((item) => {
+          {paginatedComplaints.map((item) => {
             const canEdit =
               (item.status === 'Pending' && item.reportedBy?._id === user?._id) ||
               isAdmin;
@@ -121,6 +173,45 @@ const ComplaintTable = ({ complaints = [], onDelete, onAssign, onStatusChange })
           })}
         </tbody>
       </table>
+
+      {totalPages > 0 && (
+        <div className="flex items-center justify-between px-4 py-3 border-t border-slate-200/80 bg-slate-50">
+          <span className="text-xs text-slate-500 font-medium">
+            Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, sortedComplaints.length)} of {sortedComplaints.length} entries
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-2xs"
+            >
+              Previous
+            </button>
+            <div className="flex items-center gap-1 hidden sm:flex">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`w-7 h-7 rounded-lg text-xs font-bold flex items-center justify-center transition-all ${
+                    currentPage === page
+                      ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20'
+                      : 'text-slate-600 hover:bg-slate-100'
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+            </div>
+            <button
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-2xs"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -44,7 +44,7 @@ const Sidebar = () => {
     }`;
 
   return (
-    <aside className="w-64 bg-white border-r border-slate-200/80 min-h-[calc(100vh-4rem)] p-4 flex flex-col justify-between shrink-0">
+    <aside className="w-64 bg-white border-r border-slate-200/80 h-[calc(100vh-4rem)] sticky top-16 p-4 flex flex-col justify-between shrink-0 overflow-y-auto">
       <div className="space-y-6">
         {/* Navigation Sections */}
         <nav className="space-y-1">
@@ -147,37 +147,7 @@ const Sidebar = () => {
       </div>
 
       {/* Bottom section of sidebar */}
-      <div className="pt-4 border-t border-slate-200/80 space-y-4">
-        {/* User Identity Banner */}
-        <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200/60 flex items-center gap-3">
-          <div className="relative shrink-0">
-            {avatarSrc && !imgErr ? (
-              <img
-                src={avatarSrc}
-                alt={user?.name || 'User'}
-                onError={() => setImgErr(true)}
-                className="w-10 h-10 rounded-xl object-cover ring-1 ring-indigo-500/20 shadow-xs bg-white"
-              />
-            ) : (
-              <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-xs">
-                {user?.name?.charAt(0).toUpperCase() || 'U'}
-              </div>
-            )}
-            <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full"></span>
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-              {user?.role === 'admin' ? 'Admin Portal' : 'Workspace'}
-            </p>
-            <p className="text-sm font-bold text-slate-800 truncate">
-              {user?.name || 'FixIt Portal'}
-            </p>
-            <span className="text-[10px] font-bold uppercase text-indigo-600 tracking-wide">
-              {user?.role}
-            </span>
-          </div>
-        </div>
-
+      <div className="pt-4 border-t border-slate-200/80">
         <button
           onClick={handleLogout}
           className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-rose-600 hover:bg-rose-50 transition-colors duration-150"

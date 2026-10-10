@@ -231,7 +231,7 @@ const CreateComplaint = () => {
         )}
 
         {/* Complaint Form Card */}
-        <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-6 sm:p-8 max-w-3xl space-y-6">
+        <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-6 sm:p-8 w-full space-y-6">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Title */}
             <div>

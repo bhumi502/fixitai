@@ -1,6 +1,6 @@
 // components/NotificationDropdown.jsx - Notification Bell & Dropdown
 import React, { useState, useEffect, useRef } from 'react';
-import { Bell, CheckCheck, ExternalLink } from 'lucide-react';
+import { Bell, CheckCheck, ExternalLink, Trash2, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { notificationService } from '../services/notificationService';
 import { formatDate } from '../utils/helpers';
@@ -63,6 +63,29 @@ const NotificationDropdown = () => {
     }
   };
 
+  const handleDeleteAll = async () => {
+    try {
+      await notificationService.deleteAllNotifications();
+      setNotifications([]);
+      setUnreadCount(0);
+    } catch (error) {
+      console.error('Failed to delete all notifications:', error);
+    }
+  };
+
+  const handleDelete = async (id, e, isRead) => {
+    e.stopPropagation();
+    try {
+      await notificationService.deleteNotification(id);
+      setNotifications((prev) => prev.filter((n) => n._id !== id));
+      if (!isRead) {
+        setUnreadCount((prev) => Math.max(0, prev - 1));
+      }
+    } catch (error) {
+      console.error('Failed to delete notification:', error);
+    }
+  };
+
   return (
     <div className="relative" ref={dropdownRef}>
       <button
@@ -92,15 +115,26 @@ const NotificationDropdown = () => {
                 </span>
               )}
             </div>
-            {unreadCount > 0 && (
-              <button
-                onClick={handleMarkAllAsRead}
-                className="text-xs text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1"
-              >
-                <CheckCheck className="w-3.5 h-3.5" />
-                Mark all read
-              </button>
-            )}
+            <div className="flex items-center gap-3">
+              {unreadCount > 0 && (
+                <button
+                  onClick={handleMarkAllAsRead}
+                  className="text-xs text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1"
+                >
+                  <CheckCheck className="w-3.5 h-3.5" />
+                  Mark read
+                </button>
+              )}
+              {notifications.length > 0 && (
+                <button
+                  onClick={handleDeleteAll}
+                  className="text-xs text-rose-600 hover:text-rose-700 font-medium flex items-center gap-1"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  Clear all
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="max-h-80 overflow-y-auto divide-y divide-slate-50">
@@ -124,15 +158,24 @@ const NotificationDropdown = () => {
                       {formatDate(item.createdAt)}
                     </span>
                   </div>
-                  {!item.isRead && (
+                  <div className="flex items-center gap-1">
+                    {!item.isRead && (
+                      <button
+                        onClick={(e) => handleMarkAsRead(item._id, e)}
+                        title="Mark as read"
+                        className="text-slate-400 hover:text-indigo-600 p-1 rounded-md transition-colors"
+                      >
+                        <span className="w-2 h-2 rounded-full bg-indigo-600 block"></span>
+                      </button>
+                    )}
                     <button
-                      onClick={(e) => handleMarkAsRead(item._id, e)}
-                      title="Mark as read"
-                      className="text-slate-400 hover:text-indigo-600 p-1 rounded-md"
+                      onClick={(e) => handleDelete(item._id, e, item.isRead)}
+                      title="Delete"
+                      className="text-slate-400 hover:text-rose-600 p-1 rounded-md transition-colors"
                     >
-                      <span className="w-2 h-2 rounded-full bg-indigo-600 block"></span>
+                      <X className="w-3.5 h-3.5" />
                     </button>
-                  )}
+                  </div>
                 </div>
               ))
             )}

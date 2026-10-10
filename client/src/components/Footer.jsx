@@ -1,9 +1,16 @@
 // components/Footer.jsx - Application Footer
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Wrench, Heart, Mail, Phone, MapPin } from 'lucide-react';
 
 const Footer = () => {
+  const location = useLocation();
+  const publicPaths = ['/', '/about', '/contact', '/login', '/register'];
+
+  if (!publicPaths.includes(location.pathname)) {
+    return null;
+  }
+
   return (
     <footer className="bg-slate-900 text-slate-300 border-t border-slate-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">

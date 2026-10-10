@@ -98,6 +98,13 @@ const MyComplaints = () => {
     }
   };
 
+  const handleClearFilters = () => {
+    setSearch('');
+    setStatusFilter('All');
+    setCategoryFilter('All');
+    setPriorityFilter('All');
+  };
+
   return (
     <div className="flex flex-col md:flex-row min-h-[calc(100vh-4rem)] bg-slate-50">
       <Sidebar />
@@ -205,11 +212,14 @@ const MyComplaints = () => {
             </div>
           </div>
 
-          {/* Controls Bar: Item count + View switch */}
+          {/* Controls Bar: Clear Filters + View switch */}
           <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-xs text-slate-500">
-            <span>
-              Showing <strong>{complaints.length}</strong> complaints
-            </span>
+            <button
+              onClick={handleClearFilters}
+              className="text-indigo-600 hover:text-indigo-700 font-semibold underline decoration-transparent hover:decoration-indigo-700 transition-all"
+            >
+              Clear Filters
+            </button>
 
             <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
               <button

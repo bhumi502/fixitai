@@ -1,6 +1,7 @@
 // controllers/staffController.js - Staff Member CRUD
 const Staff = require('../models/Staff');
 const User = require('../models/User');
+const { sendStaffCredentialsEmail } = require('../services/emailService');
 
 // @desc    Get all staff members
 // @route   GET /api/staff
@@ -103,6 +104,10 @@ const createStaff = async (req, res, next) => {
       status: status || 'Available',
       user: user._id,
     });
+
+    // Send credentials via email
+    const plainPassword = password || 'Password123!';
+    sendStaffCredentialsEmail(email.toLowerCase().trim(), name.trim(), plainPassword);
 
     return res.status(201).json({
       success: true,

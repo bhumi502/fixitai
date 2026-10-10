@@ -1,6 +1,8 @@
 // controllers/authController.js - Authentication & Profile Management
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const Otp = require('../models/Otp');
+const { sendOtpEmail } = require('../services/emailService');
 
 // Helper to generate JWT
 const generateToken = (id) => {
@@ -53,14 +55,68 @@ const registerUser = async (req, res, next) => {
       phone: phone ? phone.trim() : '',
       password,
       role: 'user', // Defaults to user
-      status: 'active',
+      status: 'pending', // Wait for OTP
     });
 
-    const token = generateToken(user._id);
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    
+    // Save to DB
+    await Otp.create({
+      email: user.email,
+      otp,
+    });
+
+    // Send Email
+    await sendOtpEmail(user.email, otp, 'registration');
 
     return res.status(201).json({
       success: true,
-      message: 'Account registered successfully',
+      message: 'OTP sent to your email. Please verify to complete registration.',
+      requireOtp: true,
+      email: user.email,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Verify OTP for registration
+// @route   POST /api/auth/verify-otp
+// @access  Public
+const verifyOtp = async (req, res, next) => {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return res.status(400).json({ success: false, message: 'Email and OTP are required' });
+    }
+
+    const validOtp = await Otp.findOne({ email: email.toLowerCase().trim(), otp });
+    
+    if (!validOtp) {
+      return res.status(400).json({ success: false, message: 'Invalid or expired OTP' });
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
+    
+    if (!user) {
+      return res.status(400).json({ success: false, message: 'User not found' });
+    }
+
+    // Mark user as active
+    user.status = 'active';
+    await user.save();
+
+    // Delete OTP
+    await Otp.deleteOne({ _id: validOtp._id });
+
+    // Generate token and log them in
+    const token = generateToken(user._id);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Account verified successfully',
       data: {
         _id: user._id,
         name: user.name,
@@ -104,6 +160,13 @@ const loginUser = async (req, res, next) => {
       return res.status(403).json({
         success: false,
         message: 'Your account is deactivated. Contact system administrator.',
+      });
+    }
+
+    if (user.status === 'pending') {
+      return res.status(403).json({
+        success: false,
+        message: 'Your account is not verified yet. Please check your email for the OTP.',
       });
     }
 
@@ -221,9 +284,67 @@ const updateProfile = async (req, res, next) => {
   }
 };
 
+// @desc    Forgot Password (Send OTP)
+// @route   POST /api/auth/forgot-password
+// @access  Public
+const forgotPassword = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ success: false, message: 'Please provide an email' });
+
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    await Otp.create({ email: user.email, otp });
+    await sendOtpEmail(user.email, otp, 'reset');
+
+    return res.status(200).json({ success: true, message: 'Password reset OTP sent to email' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Reset Password with OTP
+// @route   POST /api/auth/reset-password
+// @access  Public
+const resetPassword = async (req, res, next) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+    
+    if (!email || !otp || !newPassword) {
+      return res.status(400).json({ success: false, message: 'Please provide email, OTP, and new password' });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ success: false, message: 'Password must be at least 6 characters' });
+    }
+
+    const validOtp = await Otp.findOne({ email: email.toLowerCase().trim(), otp });
+    if (!validOtp) return res.status(400).json({ success: false, message: 'Invalid or expired OTP' });
+
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+    // Update password
+    user.password = newPassword;
+    await user.save();
+    
+    // Clean up OTP
+    await Otp.deleteOne({ _id: validOtp._id });
+
+    return res.status(200).json({ success: true, message: 'Password has been reset successfully. You can now login.' });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   registerUser,
+  verifyOtp,
   loginUser,
   getMe,
   updateProfile,
+  forgotPassword,
+  resetPassword,
 };

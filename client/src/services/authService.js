@@ -14,6 +14,24 @@ export const authService = {
     return response.data;
   },
 
+  // Verify OTP for Registration
+  verifyOtp: async (email, otp) => {
+    const response = await api.post('/auth/verify-otp', { email, otp });
+    return response.data;
+  },
+
+  // Forgot Password (Send OTP)
+  forgotPassword: async (email) => {
+    const response = await api.post('/auth/forgot-password', { email });
+    return response.data;
+  },
+
+  // Reset Password (with OTP)
+  resetPassword: async (email, otp, newPassword) => {
+    const response = await api.post('/auth/reset-password', { email, otp, newPassword });
+    return response.data;
+  },
+
   // Get current user profile
   getMe: async () => {
     const response = await api.get('/auth/me');
