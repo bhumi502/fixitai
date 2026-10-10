@@ -95,18 +95,24 @@ const ChatbotWidget = () => {
 
   return (
     <div className="fixed bottom-6 right-6 z-50">
-      {/* Floating Toggle Button */}
+      {/* Floating Toggle Button - Icon Only */}
       {!isOpen && (
         <button
+          type="button"
           onClick={() => setIsOpen(true)}
-          className="group relative flex items-center gap-2.5 px-4 py-3 bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 text-white rounded-full shadow-2xl shadow-indigo-600/40 hover:scale-105 transition-all duration-300"
+          title="FixIt AI Chat"
+          aria-label="Open FixIt AI Chatbot"
+          className="group relative w-14 h-14 rounded-full flex items-center justify-center bg-gradient-to-tr from-indigo-600 via-purple-600 to-blue-600 text-white shadow-2xl shadow-indigo-600/40 hover:shadow-indigo-600/60 hover:scale-110 active:scale-95 transition-all duration-300 cursor-pointer"
         >
-          <div className="relative">
-            <Bot className="w-6 h-6 stroke-[2.2]" />
-            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-400 rounded-full border-2 border-white animate-pulse" />
+          <div className="relative flex items-center justify-center">
+            <Bot className="w-7 h-7 stroke-[2.2] group-hover:rotate-12 transition-transform duration-300" />
+            <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-emerald-400 rounded-full border-2 border-white shadow-xs animate-pulse" />
           </div>
-          <span className="text-sm font-bold tracking-tight pr-1">FixIt AI Chat</span>
-          <Sparkles className="w-4 h-4 text-amber-300 animate-bounce" />
+
+          {/* Subtle Hover Tooltip */}
+          <span className="absolute right-full mr-3.5 px-3 py-1.5 bg-slate-900/90 backdrop-blur-md text-white text-xs font-semibold rounded-xl shadow-xl border border-slate-700/50 opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap hidden sm:block">
+            FixIt AI Chat
+          </span>
         </button>
       )}
 
@@ -130,12 +136,24 @@ const ChatbotWidget = () => {
               </div>
             </div>
 
-            <button
-              onClick={() => setIsOpen(false)}
-              className="p-1.5 text-white/80 hover:text-white hover:bg-white/10 rounded-full transition-colors"
-            >
-              <Minimize2 className="w-5 h-5" />
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setIsOpen(false)}
+                title="Minimize chat"
+                className="p-1.5 text-white/80 hover:text-white hover:bg-white/15 rounded-xl transition-colors cursor-pointer"
+              >
+                <Minimize2 className="w-5 h-5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsOpen(false)}
+                title="Close chat"
+                className="p-1.5 text-white/80 hover:text-white hover:bg-white/15 rounded-xl transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
           </div>
 
           {/* Messages Body */}
