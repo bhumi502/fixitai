@@ -69,7 +69,7 @@ const Navbar = () => {
             </div>
           </Link>
 
-          {/* Center Navigation Links - Completely removed on Admin side */}
+          {/* Center Navigation Links */}
           {!isAdmin ? (
             <nav className="hidden md:flex items-center gap-6">
               <Link
